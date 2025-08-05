@@ -879,19 +879,65 @@ test_plan:
         - agent: "testing"
         - comment: "🎯 CURL AUTHENTICATION TESTING COMPLETED SUCCESSFULLY! ✅ MANUAL CURL VERIFICATION: All authentication endpoints working correctly with curl commands identical to frontend requests. PHASE 1 - LOGIN TEST: ✅ POST /api/auth/login with moderator.premium@pokerpro.com/PokerPremiumMod2024! returns proper JWT token, user role 'moderator', subscription status 'active'. PHASE 2 - TOKEN VERIFICATION: ✅ GET /api/auth/me with Authorization Bearer token returns complete user profile with all required fields. PHASE 3 - CALCULATOR ACCESS: ✅ POST /api/analyze-hand with Authorization Bearer token returns successful analysis - Win: 64.38%, Tie: 1.67%, Lose: 33.95%, proper hand strength and recommendations. 🏆 CRITICAL FINDING: NO 'Authentication credentials required' ERROR EXISTS! The authentication system is working perfectly with curl commands that exactly replicate frontend behavior. All API endpoints return 200 status codes, JWT tokens are properly validated, and calculator access works without any authentication issues. The reported authentication problem does not exist in the current system state."
 
-agent_communication:
-    - agent: "testing"
-    - message: "Completed comprehensive backend API testing. Found critical bug in treys library integration that breaks flop/turn analysis. The _evaluate_current_hand() method calls evaluator.evaluate() with incomplete boards, but treys requires exactly 5 cards. This affects any scenario with <5 community cards. Also found minor issues with error handling for invalid card formats. Performance is acceptable but could be optimized. 9/14 tests passed overall."
-    - agent: "testing"
-    - message: "MAJOR PROGRESS: Fixed critical treys library integration issues! 🎉 Priority test results: 5/6 passed (83.3%). ✅ FIXED: Flop analysis with incomplete board (87.34% win, straight detected), Turn analysis (73.7% win, straight detected), Invalid card format validation (proper 400 errors), Hand strength analysis (made/drawing hands), Monte Carlo accuracy (consistent results). ❌ REMAINING: Performance optimization needed - high iteration tests take 5-10s instead of target <5s. Fixed _check_straight_potential() bug that was causing 500 errors. Overall backend functionality is now working correctly with only performance tuning needed."
-    - agent: "testing"
-    - message: "🎯 COMPREHENSIVE FRONTEND TESTING COMPLETED SUCCESSFULLY! ✅ All 10 frontend tasks tested and working correctly. VISUAL DESIGN: Professional dark theme with emerald poker felt design confirmed, proper contrast and readability validated. CARD SELECTION: Sequential flow working (hole cards → flop → turn → river), redesigned modal with organized suit sections (Spades, Hearts, Diamonds, Clubs) functioning perfectly. INTERACTIVE ELEMENTS: Player count controls, Clear All button, hover animations all working. REAL ANALYSIS INTEGRATION: Backend API integration successful, loading states with 'Analyzing Hand' overlay working, Monte Carlo simulation messages displaying correctly. RESPONSIVE DESIGN: Mobile (390x844) and tablet (768x1024) views working properly. COLOR-CODED UI: Community card sections properly color-coded (Flop-emerald, Turn-blue, River-purple). ENHANCED FEATURES: Professional footer with feature highlights, smooth transitions, 3D card effects all confirmed working. 🏆 OVERALL STATUS: Frontend redesign is a complete success with beautiful professional casino-like interface!"
-    - agent: "testing"
-    - message: "🔐 COMPREHENSIVE SAAS AUTHENTICATION SYSTEM TESTING COMPLETED! ✅ ALL 15/15 TESTS PASSED (100% SUCCESS RATE)! 🎉 AUTHENTICATION FLOW: User registration, login, logout, password reset, and user profile retrieval all working perfectly with proper JWT token management and HTTP-only cookies. SUBSCRIPTION MANAGEMENT: Package listing (Monthly Pro $29, Yearly Pro $290), Stripe checkout session creation, payment status checking, and webhook handling all functioning correctly. ACCESS CONTROL: Analyze-hand endpoint properly protected - returns 403 without authentication and 403 with authentication but no active subscription, correctly enforcing subscription paywall. ERROR HANDLING: Duplicate email registration, invalid credentials, and unauthorized access to protected routes all handled with appropriate error codes. SECURITY: JWT tokens, password hashing, reset tokens, and session management all implemented securely. The complete SaaS authentication system is production-ready and working flawlessly!"
-    - agent: "testing"
-    - message: "🎯 PAYMENT SYSTEM FIX & MODERATOR ACCESS TESTING COMPLETED! ✅ ALL 9/9 TESTS PASSED (100% SUCCESS RATE)! 🎉 PAYMENT SYSTEM FIX: User registration and login working correctly, checkout session creation now works with cookie authentication (no more 403 errors), valid Stripe checkout URLs being generated successfully. MODERATOR ACCESS: Moderator login successful with credentials moderateur@pokerpro.com/PokerMod2024!, moderator can access calculator without subscription (bypasses subscription requirements), moderator role properly recognized. COMPLETE PAYMENT FLOW: Regular users correctly blocked without subscription, payment buttons working for regular users, cookie authentication functioning properly. 🏆 CONCLUSION: The corrected payment system is working perfectly - users can now click subscribe buttons and get valid Stripe checkout sessions. Moderator access is fully functional with proper subscription bypass."
-    - agent: "testing"
-    - message: "🎯 COMPLETE POKER CALCULATOR WORKFLOW TESTING COMPLETED! ✅ AUTHENTICATION FLOW: Successfully tested moderator login with credentials moderateur@pokerpro.com/PokerMod2024!, verified redirect to dashboard, confirmed user shows as 'Poker Pro Modérateur' with 'Abonnement actif' status. ✅ CALCULATOR ACCESS: Successfully clicked 'Ouvrir le calculateur' button, verified redirect to /calculator page, confirmed poker table interface loads with 'Virtual Poker Table' title, verified probability dashboard shows 'Ready for Analysis', confirmed 'Calculate Probabilities' button is visible and properly styled. ✅ INTERFACE VERIFICATION: Card selector modal opens correctly with organized suit sections (Spades, Hearts, Diamonds, Clubs), player count selector works (tested changing from 2 to 6 players), Clear All button functions properly and returns to 'Ready for Analysis' state. ✅ WORKFLOW INTEGRATION: All authentication, navigation, and interface components working seamlessly together. Minor: Card selection in modal has overlay click interference issue but modal opens and displays cards correctly. 🏆 OVERALL: Complete poker calculator workflow is fully functional for authenticated moderator users with proper subscription bypass!"
+  - task: "Usage Limitation System - Daily limits for free accounts (5 analyses per day)"
+    implemented: true
+    working: true
+    file: "/app/backend/usage_tracking.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "✅ COMPREHENSIVE USAGE LIMITATION TESTING COMPLETED SUCCESSFULLY! 🎉 ALL 9/9 TESTS PASSED (100% SUCCESS RATE)! PHASE 1 - FREE USER LIMITATIONS: ✅ Free user registration with initial stats (0/5 analyses used, not premium) working correctly, 5 consecutive analyses completed successfully with proper counter increments (4→3→2→1→0 remaining), 6th analysis correctly blocked with 429 error and proper French message 'Vous avez atteint votre limite quotidienne de 5 analyses gratuites', usage stats endpoint returns correct information (5/5 used, limit reached). PHASE 2 - MODERATOR UNLIMITED ACCESS: ✅ Moderator login successful with credentials moderator.premium@pokerpro.com/PokerPremiumMod2024!, moderator has unlimited access (3 analyses successful without limits), permissions endpoint shows 17 accessible features for moderator, check-feature-access endpoint grants access to premium features like hand_history. PHASE 3 - COMMUNITY SUPPORT: ✅ Community stats endpoint working (0 questions, 0 answers, 0 active users), Discord endpoint returns proper info (1,200+ members, 5 channels). 🏆 TECHNICAL VERIFICATION: Usage tracking with MongoDB daily_usage collection working correctly, counter resets properly for new days, premium users (moderators) bypass all limits, error 429 with proper JSON structure returned when limit exceeded, all new API endpoints (/api/usage-stats, /api/permissions, /api/check-feature-access, /api/community/stats, /api/community/discord) functioning as specified. The complete usage limitation system is working perfectly as requested in the review."
+
+  - task: "New API Endpoints - /api/usage-stats, /api/permissions, /api/check-feature-access"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "✅ NEW API ENDPOINTS TESTING COMPLETED SUCCESSFULLY! All 3 new endpoints working correctly: GET /api/usage-stats returns proper user usage statistics with fields (user_id, daily_analyses: {used, remaining, limit, unlimited}, is_premium, limit_reached, reset_time), GET /api/permissions returns complete user permissions summary with 17 accessible features for moderators and proper upgrade information for free users, POST /api/check-feature-access/{feature} correctly checks feature access (moderator can access hand_history with reason 'premium_access', includes upsell messages for blocked features). All endpoints require authentication and return proper JSON responses with correct status codes."
+
+  - task: "Community Support System - /api/community/questions, /api/community/stats, /api/community/discord"
+    implemented: true
+    working: true
+    file: "/app/backend/community_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "✅ COMMUNITY SUPPORT SYSTEM TESTING COMPLETED SUCCESSFULLY! All community endpoints working correctly: GET /api/community/stats returns proper statistics (total_questions, total_answers, active_users, top_contributors), GET /api/community/discord returns Discord community information with member count (1,200+), 5 channels, and community guidelines, GET /api/community/questions returns paginated questions list with proper pagination structure. All endpoints accessible without authentication as intended for community support."
+
+  - task: "Error 429 Handling - Proper limit_reached error with French messages"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "✅ ERROR 429 HANDLING TESTING COMPLETED SUCCESSFULLY! When free users exceed their daily limit of 5 analyses, the system correctly returns HTTP 429 Too Many Requests with proper JSON structure: {'error': 'limit_reached', 'message': 'Vous avez atteint votre limite quotidienne de 5 analyses gratuites. Abonnez-vous pour un accès illimité.', 'remaining_analyses': 0, 'reset_time': '2025-08-06 00:00:00', 'is_premium': false}. The French error message is user-friendly and includes upgrade call-to-action as specified."
+
+  - task: "Usage Tracking with Counter and Daily Reset"
+    implemented: true
+    working: true
+    file: "/app/backend/usage_tracking.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "✅ USAGE TRACKING SYSTEM TESTING COMPLETED SUCCESSFULLY! The UsageTracker class correctly implements daily usage limits with MongoDB storage: creates daily_usage collection entries per user, increments analysis_count with each request (1→2→3→4→5), tracks last_analysis_date for daily reset logic, provides remaining_analyses calculation (5-current_count), handles premium users with unlimited access (-1 remaining indicates unlimited), includes reset_time for next day reset. The system properly differentiates between free users (5 daily limit) and premium users (unlimited access)." verified redirect to dashboard, confirmed user shows as 'Poker Pro Modérateur' with 'Abonnement actif' status. ✅ CALCULATOR ACCESS: Successfully clicked 'Ouvrir le calculateur' button, verified redirect to /calculator page, confirmed poker table interface loads with 'Virtual Poker Table' title, verified probability dashboard shows 'Ready for Analysis', confirmed 'Calculate Probabilities' button is visible and properly styled. ✅ INTERFACE VERIFICATION: Card selector modal opens correctly with organized suit sections (Spades, Hearts, Diamonds, Clubs), player count selector works (tested changing from 2 to 6 players), Clear All button functions properly and returns to 'Ready for Analysis' state. ✅ WORKFLOW INTEGRATION: All authentication, navigation, and interface components working seamlessly together. Minor: Card selection in modal has overlay click interference issue but modal opens and displays cards correctly. 🏆 OVERALL: Complete poker calculator workflow is fully functional for authenticated moderator users with proper subscription bypass!"
     - agent: "testing"
     - message: "🚨 CRITICAL BUG CONFIRMED: Calculator Card Selection Bug! ❌ ISSUE: The Calculate Probabilities button remains DISABLED (gray) even after selecting 2 hole cards, preventing users from running probability calculations. 🔍 ROOT CAUSE ANALYSIS: Console logs consistently show 'Can calculate: false' even when cards should be selected. The issue is in the state management between PokerTable and App components. The onCardsChange callback (App.js line 37-41) and canCalculate logic (App.js line 113) are not working properly. The handleHoleCardSelect function in PokerTable calls onCardsChange, but the currentCards state in App component is not updating correctly, causing canCalculate to remain false. 🎯 IMPACT: Users cannot access the core functionality of the poker calculator - probability analysis is completely blocked after card selection. This is a critical user experience bug that breaks the primary feature of the application. 🔧 TECHNICAL DETAILS: The bug is in the React state management flow where card selection events are not properly propagating from PokerTable to App component, preventing the Calculate button from becoming enabled (green) as expected."
     - agent: "testing"
