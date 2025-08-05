@@ -9,9 +9,12 @@ export class AuthAPI {
   static getAuthHeaders() {
     const token = Cookies.get('access_token');
     if (token) {
-      // Token is already in "Bearer xxx" format from backend
+      // Remove quotes if present and ensure proper Bearer format
+      const cleanToken = token.replace(/"/g, '');
+      // If it already starts with "Bearer", use as is, otherwise add "Bearer "
+      const authToken = cleanToken.startsWith('Bearer ') ? cleanToken : `Bearer ${cleanToken}`;
       return {
-        'Authorization': token
+        'Authorization': authToken
       };
     }
     return {};
