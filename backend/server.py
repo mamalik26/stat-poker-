@@ -40,7 +40,7 @@ permissions_service = PermissionsService(db)
 def get_db() -> AsyncIOMotorDatabase:
     return db
 
-@api_router.post("/analyze-hand", response_model=AnalysisResponse)
+@api_router.post("/analyze-hand")
 async def analyze_hand(
     request: AnalysisRequest,
     current_user: User = Depends(get_current_user),
