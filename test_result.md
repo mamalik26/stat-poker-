@@ -855,6 +855,30 @@ test_plan:
         - agent: "testing"
         - comment: "🎉 COMPREHENSIVE PREMIUM MODERATOR TESTING COMPLETED SUCCESSFULLY! ✅ ALL 5/5 TESTS PASSED (100% SUCCESS RATE)! PHASE 1 - AUTHENTICATION TESTS: ✅ Test de connexion - Moderator login successful with credentials moderator.premium@pokerpro.com/PokerPremiumMod2024!, proper JWT token generation and validation confirmed, user role 'moderator' and subscription status 'active' verified. PHASE 2 - CALCULATOR ACCESS TESTS: ✅ Test d'accès calculateur - Calculator accessible without subscription restrictions, AK pre-flop analysis returned 63.91% win probability, all required response fields present (win_probability, tie_probability, lose_probability, hand_strength, opponent_ranges, recommendation). ✅ Test de privilèges - Subscription bypass working correctly for moderator role, calculator access granted without subscription check. PHASE 3 - COMPLETE API TESTING: ✅ Test API complète - Complete poker analysis successful with trip jacks scenario, Monte Carlo simulation with 50,000 iterations completed in 3.36s, analysis returned Win: 92.08%, Tie: 0.0%, Lose: 7.92%, strategic recommendation 'Bet/Raise (High 85%+)', probabilities sum correctly to 100%, hand strength analysis working, analysis history being saved to database. 🏆 CONCLUSION: New premium moderator account (moderator.premium@pokerpro.com) is fully functional with complete access to all calculator features, proper subscription bypass, and working Monte Carlo simulations. All authentication endpoints working correctly, JWT tokens properly formatted and validated, calculator API accessible without restrictions, complete poker analysis pipeline functioning as expected."
 
+  - task: "Premium Moderator Account Authentication Testing - Complete verification of moderator.premium@pokerpro.com credentials and calculator access"
+    implemented: true
+    working: true
+    file: "/app/moderator_premium_test.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "🎉 COMPREHENSIVE PREMIUM MODERATOR TESTING COMPLETED SUCCESSFULLY! ✅ ALL 5/5 TESTS PASSED (100% SUCCESS RATE)! PHASE 1 - AUTHENTICATION TESTS: ✅ Test de connexion - Moderator login successful with credentials moderator.premium@pokerpro.com/PokerPremiumMod2024!, proper JWT token generation and validation confirmed, user role 'moderator' and subscription status 'active' verified. PHASE 2 - CALCULATOR ACCESS TESTS: ✅ Test d'accès calculateur - Calculator accessible without subscription restrictions, AK pre-flop analysis returned 64.11% win probability, all required response fields present (win_probability, tie_probability, lose_probability, hand_strength, opponent_ranges, recommendation). ✅ Test de privilèges - Subscription bypass working correctly for moderator role, calculator access granted without subscription check. PHASE 3 - COMPLETE API TESTING: ✅ Test API complète - Complete poker analysis successful with trip jacks scenario, Monte Carlo simulation with 50,000 iterations completed in 3.37s, analysis returned Win: 91.88%, Tie: 0.0%, Lose: 8.12%, strategic recommendation 'Bet/Raise (High 85%+)', probabilities sum correctly to 100%, hand strength analysis working, analysis history being saved to database. 🏆 CONCLUSION: New premium moderator account (moderator.premium@pokerpro.com) is fully functional with complete access to all calculator features, proper subscription bypass, and working Monte Carlo simulations. All authentication endpoints working correctly, JWT tokens properly formatted and validated, calculator API accessible without restrictions, complete poker analysis pipeline functioning as expected."
+
+  - task: "Curl-based Authentication Testing - Exact frontend simulation to diagnose authentication credentials issue"
+    implemented: true
+    working: true
+    file: "/app/curl_auth_test.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "🎯 CURL AUTHENTICATION TESTING COMPLETED SUCCESSFULLY! ✅ MANUAL CURL VERIFICATION: All authentication endpoints working correctly with curl commands identical to frontend requests. PHASE 1 - LOGIN TEST: ✅ POST /api/auth/login with moderator.premium@pokerpro.com/PokerPremiumMod2024! returns proper JWT token, user role 'moderator', subscription status 'active'. PHASE 2 - TOKEN VERIFICATION: ✅ GET /api/auth/me with Authorization Bearer token returns complete user profile with all required fields. PHASE 3 - CALCULATOR ACCESS: ✅ POST /api/analyze-hand with Authorization Bearer token returns successful analysis - Win: 64.38%, Tie: 1.67%, Lose: 33.95%, proper hand strength and recommendations. 🏆 CRITICAL FINDING: NO 'Authentication credentials required' ERROR EXISTS! The authentication system is working perfectly with curl commands that exactly replicate frontend behavior. All API endpoints return 200 status codes, JWT tokens are properly validated, and calculator access works without any authentication issues. The reported authentication problem does not exist in the current system state."
+
 agent_communication:
     - agent: "testing"
     - message: "Completed comprehensive backend API testing. Found critical bug in treys library integration that breaks flop/turn analysis. The _evaluate_current_hand() method calls evaluator.evaluate() with incomplete boards, but treys requires exactly 5 cards. This affects any scenario with <5 community cards. Also found minor issues with error handling for invalid card formats. Performance is acceptable but could be optimized. 9/14 tests passed overall."
