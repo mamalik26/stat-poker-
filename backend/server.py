@@ -144,30 +144,36 @@ async def analyze_hand(
             simulation_iterations=request.simulation_iterations
         )
         
-        # Convert to response format
-        response = AnalysisResponse(
-            win_probability=result.win_probability,
-            tie_probability=result.tie_probability,
-            lose_probability=result.lose_probability,
-            hand_strength=result.hand_strength.__dict__,
-            opponent_ranges=[range.__dict__ for range in result.opponent_ranges],
-            recommendation=result.recommendation.__dict__,
-            calculations=result.calculations.__dict__
-        )
-        
-        # Add usage information to response
-        response_dict = response.dict()
-        response_dict['usage_info'] = {
-            'remaining_analyses': usage_result['remaining_analyses'],
-            'is_premium': usage_result['is_premium'],
-            'daily_limit': UsageTracker.FREE_DAILY_LIMIT if not usage_result['is_premium'] else None
+        # Convert to response format with usage info
+        response_dict = {
+            'win_probability': result.win_probability,
+            'tie_probability': result.tie_probability,
+            'lose_probability': result.lose_probability,
+            'hand_strength': result.hand_strength.__dict__,
+            'opponent_ranges': [range.__dict__ for range in result.opponent_ranges],
+            'recommendation': result.recommendation.__dict__,
+            'calculations': result.calculations.__dict__,
+            'usage_info': {
+                'remaining_analyses': usage_result['remaining_analyses'],
+                'is_premium': usage_result['is_premium'],
+                'daily_limit': UsageTracker.FREE_DAILY_LIMIT if not usage_result['is_premium'] else None
+            }
         }
         
-        # Store in database (optional)
+        # Store in database (optional) - create response object for storage
         try:
+            response_for_storage = AnalysisResponse(
+                win_probability=result.win_probability,
+                tie_probability=result.tie_probability,
+                lose_probability=result.lose_probability,
+                hand_strength=result.hand_strength.__dict__,
+                opponent_ranges=[range.__dict__ for range in result.opponent_ranges],
+                recommendation=result.recommendation.__dict__,
+                calculations=result.calculations.__dict__
+            )
             hand_history = HandHistory(
                 analysis_request=request,
-                analysis_response=response,
+                analysis_response=response_for_storage,
                 user_id=current_user.id
             )
             await db.hand_history.insert_one(hand_history.dict())
