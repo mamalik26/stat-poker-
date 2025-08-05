@@ -983,24 +983,430 @@ class PokerAPITester:
             "all_results": self.test_results
         }
 
+class UsageLimitationTester:
+    """Test the new usage limitation system for free accounts"""
+    
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+        self.session = requests.Session()
+        self.test_results = []
+        self.free_user_email = f"freeuser_{uuid.uuid4().hex[:8]}@example.com"
+        self.free_user_password = "FreeUser123!"
+        self.moderator_email = "moderator.premium@pokerpro.com"
+        self.moderator_password = "PokerPremiumMod2024!"
+        
+    def log_test(self, test_name: str, passed: bool, details: str = ""):
+        """Log test results"""
+        status = "✅ PASS" if passed else "❌ FAIL"
+        print(f"{status} {test_name}")
+        if details:
+            print(f"   Details: {details}")
+        self.test_results.append({
+            "test": test_name,
+            "passed": passed,
+            "details": details
+        })
+    
+    def set_auth_header(self, token: str):
+        """Set authorization header for authenticated requests"""
+        self.session.headers.update({"Authorization": f"Bearer {token}"})
+    
+    def clear_auth_header(self):
+        """Clear authorization header"""
+        if "Authorization" in self.session.headers:
+            del self.session.headers["Authorization"]
+    
+    def test_free_user_registration_and_initial_stats(self):
+        """Test 1: Create new free user and check initial usage stats"""
+        try:
+            # Register new free user
+            register_payload = {
+                "name": "Free User Test",
+                "email": self.free_user_email,
+                "password": self.free_user_password
+            }
+            
+            response = self.session.post(f"{self.base_url}/auth/register", json=register_payload)
+            if response.status_code == 200:
+                data = response.json()
+                self.set_auth_header(data["access_token"])
+                
+                # Check initial usage stats
+                stats_response = self.session.get(f"{self.base_url}/usage-stats")
+                if stats_response.status_code == 200:
+                    stats = stats_response.json()
+                    
+                    # Verify initial state
+                    if (stats.get("daily_analyses", {}).get("used") == 0 and
+                        stats.get("daily_analyses", {}).get("remaining") == 5 and
+                        stats.get("daily_analyses", {}).get("limit") == 5 and
+                        not stats.get("is_premium", True)):
+                        
+                        self.log_test("Free user registration and initial stats", True, 
+                                    f"Initial state: 0/5 analyses used, not premium")
+                    else:
+                        self.log_test("Free user registration and initial stats", False, 
+                                    f"Incorrect initial stats: {stats}")
+                else:
+                    self.log_test("Free user registration and initial stats", False, 
+                                f"Usage stats failed: {stats_response.status_code}")
+            else:
+                self.log_test("Free user registration and initial stats", False, 
+                            f"Registration failed: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Free user registration and initial stats", False, f"Exception: {str(e)}")
+    
+    def test_free_user_five_analyses(self):
+        """Test 2: Perform 5 consecutive analyses and verify counter increments"""
+        try:
+            analysis_payload = {
+                "hole_cards": [
+                    {"rank": "A", "suit": "spades"},
+                    {"rank": "K", "suit": "hearts"}
+                ],
+                "community_cards": [None, None, None, None, None],
+                "player_count": 2,
+                "simulation_iterations": 10000
+            }
+            
+            successful_analyses = 0
+            
+            for i in range(1, 6):  # Perform 5 analyses
+                response = self.session.post(f"{self.base_url}/analyze-hand", json=analysis_payload)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    usage_info = data.get("usage_info", {})
+                    
+                    expected_remaining = 5 - i
+                    if usage_info.get("remaining_analyses") == expected_remaining:
+                        successful_analyses += 1
+                    else:
+                        self.log_test("Free user five analyses", False, 
+                                    f"Analysis {i}: Expected {expected_remaining} remaining, got {usage_info.get('remaining_analyses')}")
+                        return
+                else:
+                    self.log_test("Free user five analyses", False, 
+                                f"Analysis {i} failed: {response.status_code}")
+                    return
+            
+            if successful_analyses == 5:
+                self.log_test("Free user five analyses", True, 
+                            "All 5 analyses completed successfully with correct counter increments")
+            else:
+                self.log_test("Free user five analyses", False, 
+                            f"Only {successful_analyses}/5 analyses successful")
+                
+        except Exception as e:
+            self.log_test("Free user five analyses", False, f"Exception: {str(e)}")
+    
+    def test_free_user_sixth_analysis_blocked(self):
+        """Test 3: Attempt 6th analysis should return 429 error with limit_reached"""
+        try:
+            analysis_payload = {
+                "hole_cards": [
+                    {"rank": "Q", "suit": "diamonds"},
+                    {"rank": "J", "suit": "clubs"}
+                ],
+                "community_cards": [None, None, None, None, None],
+                "player_count": 2,
+                "simulation_iterations": 10000
+            }
+            
+            response = self.session.post(f"{self.base_url}/analyze-hand", json=analysis_payload)
+            
+            if response.status_code == 429:
+                data = response.json()
+                detail = data.get("detail", {})
+                
+                if (detail.get("error") == "limit_reached" and
+                    detail.get("remaining_analyses") == 0 and
+                    "limite quotidienne" in detail.get("message", "")):
+                    
+                    self.log_test("Free user sixth analysis blocked", True, 
+                                f"Correctly blocked with 429 error: {detail.get('message')}")
+                else:
+                    self.log_test("Free user sixth analysis blocked", False, 
+                                f"429 error but incorrect details: {detail}")
+            else:
+                self.log_test("Free user sixth analysis blocked", False, 
+                            f"Expected 429, got {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Free user sixth analysis blocked", False, f"Exception: {str(e)}")
+    
+    def test_usage_stats_endpoint(self):
+        """Test 4: Verify /api/usage-stats returns correct information"""
+        try:
+            response = self.session.get(f"{self.base_url}/usage-stats")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                required_fields = ["user_id", "daily_analyses", "is_premium", "limit_reached"]
+                daily_fields = ["used", "remaining", "limit", "unlimited"]
+                
+                if (all(field in data for field in required_fields) and
+                    all(field in data["daily_analyses"] for field in daily_fields)):
+                    
+                    # Check values after 5 analyses
+                    daily = data["daily_analyses"]
+                    if (daily["used"] == 5 and
+                        daily["remaining"] == 0 and
+                        daily["limit"] == 5 and
+                        not daily["unlimited"] and
+                        not data["is_premium"] and
+                        data["limit_reached"]):
+                        
+                        self.log_test("Usage stats endpoint", True, 
+                                    f"Correct stats: {daily['used']}/{daily['limit']} used, limit reached")
+                    else:
+                        self.log_test("Usage stats endpoint", False, 
+                                    f"Incorrect values: {data}")
+                else:
+                    self.log_test("Usage stats endpoint", False, 
+                                f"Missing required fields: {list(data.keys())}")
+            else:
+                self.log_test("Usage stats endpoint", False, 
+                            f"Status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Usage stats endpoint", False, f"Exception: {str(e)}")
+    
+    def test_moderator_unlimited_access(self):
+        """Test 5: Moderator account should have unlimited access"""
+        try:
+            # Login as moderator
+            login_payload = {
+                "email": self.moderator_email,
+                "password": self.moderator_password
+            }
+            
+            response = self.session.post(f"{self.base_url}/auth/login", json=login_payload)
+            if response.status_code == 200:
+                data = response.json()
+                self.set_auth_header(data["access_token"])
+                
+                # Check usage stats for moderator
+                stats_response = self.session.get(f"{self.base_url}/usage-stats")
+                if stats_response.status_code == 200:
+                    stats = stats_response.json()
+                    
+                    if (stats.get("daily_analyses", {}).get("unlimited") and
+                        stats.get("is_premium") and
+                        not stats.get("limit_reached")):
+                        
+                        # Test multiple analyses work
+                        analysis_payload = {
+                            "hole_cards": [
+                                {"rank": "A", "suit": "hearts"},
+                                {"rank": "A", "suit": "spades"}
+                            ],
+                            "community_cards": [None, None, None, None, None],
+                            "player_count": 2,
+                            "simulation_iterations": 10000
+                        }
+                        
+                        # Try 3 analyses to verify unlimited access
+                        successful_analyses = 0
+                        for i in range(3):
+                            analysis_response = self.session.post(f"{self.base_url}/analyze-hand", json=analysis_payload)
+                            if analysis_response.status_code == 200:
+                                successful_analyses += 1
+                        
+                        if successful_analyses == 3:
+                            self.log_test("Moderator unlimited access", True, 
+                                        "Moderator has unlimited access, 3 analyses successful")
+                        else:
+                            self.log_test("Moderator unlimited access", False, 
+                                        f"Only {successful_analyses}/3 analyses successful")
+                    else:
+                        self.log_test("Moderator unlimited access", False, 
+                                    f"Incorrect moderator stats: {stats}")
+                else:
+                    self.log_test("Moderator unlimited access", False, 
+                                f"Stats request failed: {stats_response.status_code}")
+            else:
+                self.log_test("Moderator unlimited access", False, 
+                            f"Moderator login failed: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Moderator unlimited access", False, f"Exception: {str(e)}")
+    
+    def test_permissions_endpoint(self):
+        """Test 6: Test /api/permissions endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/permissions")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                required_fields = ["user_id", "email", "is_premium", "subscription_status", 
+                                 "daily_analyses", "accessible_features", "upgrade_available"]
+                
+                if all(field in data for field in required_fields):
+                    # Check moderator permissions
+                    if (data["is_premium"] and
+                        data["subscription_status"] == "active" and
+                        not data["upgrade_available"] and
+                        len(data["accessible_features"]) > 10):  # Should have many features
+                        
+                        self.log_test("Permissions endpoint", True, 
+                                    f"Moderator permissions correct: {len(data['accessible_features'])} features accessible")
+                    else:
+                        self.log_test("Permissions endpoint", False, 
+                                    f"Incorrect permissions: {data}")
+                else:
+                    self.log_test("Permissions endpoint", False, 
+                                f"Missing required fields: {list(data.keys())}")
+            else:
+                self.log_test("Permissions endpoint", False, 
+                            f"Status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Permissions endpoint", False, f"Exception: {str(e)}")
+    
+    def test_check_feature_access_endpoint(self):
+        """Test 7: Test /api/check-feature-access endpoint"""
+        try:
+            # Test premium feature access
+            response = self.session.post(f"{self.base_url}/check-feature-access/hand_history")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                required_fields = ["allowed", "reason", "upgrade_required"]
+                
+                if all(field in data for field in required_fields):
+                    # Moderator should have access to premium features
+                    if data["allowed"] and not data["upgrade_required"]:
+                        self.log_test("Check feature access endpoint", True, 
+                                    f"Moderator can access hand_history: {data['reason']}")
+                    else:
+                        self.log_test("Check feature access endpoint", False, 
+                                    f"Moderator denied access: {data}")
+                else:
+                    self.log_test("Check feature access endpoint", False, 
+                                f"Missing required fields: {list(data.keys())}")
+            else:
+                self.log_test("Check feature access endpoint", False, 
+                            f"Status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Check feature access endpoint", False, f"Exception: {str(e)}")
+    
+    def test_community_stats_endpoint(self):
+        """Test 8: Test /api/community/stats endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/community/stats")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                required_fields = ["total_questions", "total_answers", "active_users", "top_contributors"]
+                
+                if all(field in data for field in required_fields):
+                    self.log_test("Community stats endpoint", True, 
+                                f"Stats: {data['total_questions']} questions, {data['total_answers']} answers, {data['active_users']} active users")
+                else:
+                    self.log_test("Community stats endpoint", False, 
+                                f"Missing required fields: {list(data.keys())}")
+            else:
+                self.log_test("Community stats endpoint", False, 
+                            f"Status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Community stats endpoint", False, f"Exception: {str(e)}")
+    
+    def test_community_discord_endpoint(self):
+        """Test 9: Test /api/community/discord endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/community/discord")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                required_fields = ["title", "description", "discord_link", "member_count", "channels", "guidelines"]
+                
+                if all(field in data for field in required_fields):
+                    self.log_test("Community Discord endpoint", True, 
+                                f"Discord info: {data['member_count']} members, {len(data['channels'])} channels")
+                else:
+                    self.log_test("Community Discord endpoint", False, 
+                                f"Missing required fields: {list(data.keys())}")
+            else:
+                self.log_test("Community Discord endpoint", False, 
+                            f"Status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Community Discord endpoint", False, f"Exception: {str(e)}")
+    
+    def run_all_tests(self):
+        """Run all usage limitation tests"""
+        print("🔒 Starting Usage Limitation System Tests...")
+        print(f"Testing backend at: {self.base_url}")
+        print("=" * 60)
+        
+        # Test sequence for free user limitations
+        print("\n📊 Free User Limitation Tests:")
+        self.test_free_user_registration_and_initial_stats()
+        self.test_free_user_five_analyses()
+        self.test_free_user_sixth_analysis_blocked()
+        self.test_usage_stats_endpoint()
+        
+        # Test moderator unlimited access
+        print("\n👑 Moderator Access Tests:")
+        self.test_moderator_unlimited_access()
+        self.test_permissions_endpoint()
+        self.test_check_feature_access_endpoint()
+        
+        # Test community endpoints
+        print("\n🌐 Community Support Tests:")
+        self.test_community_stats_endpoint()
+        self.test_community_discord_endpoint()
+        
+        # Summary
+        print("=" * 60)
+        passed = sum(1 for result in self.test_results if result["passed"])
+        total = len(self.test_results)
+        print(f"📊 Test Summary: {passed}/{total} tests passed")
+        
+        if passed == total:
+            print("🎉 All usage limitation tests passed! System is working correctly.")
+        else:
+            print("⚠️  Some tests failed. Check details above.")
+            failed_tests = [result for result in self.test_results if not result["passed"]]
+            print("\nFailed tests:")
+            for test in failed_tests:
+                print(f"  ❌ {test['test']}: {test['details']}")
+        
+        return {
+            "total_tests": total,
+            "passed_tests": passed,
+            "failed_tests": total - passed,
+            "success_rate": (passed / total) * 100 if total > 0 else 0,
+            "all_results": self.test_results
+        }
+
 def main():
     """Main test execution"""
     print("🚀 Starting Comprehensive Backend Testing...")
     print("=" * 80)
     
-    # Test SaaS Authentication System
-    auth_tester = SaaSAuthTester(BACKEND_URL)
-    auth_results = auth_tester.run_all_tests()
+    # Test Usage Limitation System (New Features)
+    usage_tester = UsageLimitationTester(BACKEND_URL)
+    usage_results = usage_tester.run_all_tests()
     
     print("\n" + "=" * 80)
     print("📋 FINAL TEST SUMMARY")
     print("=" * 80)
     
-    print(f"🔐 SaaS Authentication Tests: {auth_results['passed_tests']}/{auth_results['total_tests']} passed ({auth_results['success_rate']:.1f}%)")
+    print(f"🔒 Usage Limitation Tests: {usage_results['passed_tests']}/{usage_results['total_tests']} passed ({usage_results['success_rate']:.1f}%)")
     
-    total_tests = auth_results['total_tests']
-    total_passed = auth_results['passed_tests']
-    total_failed = auth_results['failed_tests']
+    total_tests = usage_results['total_tests']
+    total_passed = usage_results['passed_tests']
+    total_failed = usage_results['failed_tests']
     
     print(f"\n📊 Overall Results:")
     print(f"   Total Tests: {total_tests}")
@@ -1009,7 +1415,7 @@ def main():
     print(f"   Success Rate: {(total_passed / total_tests) * 100 if total_tests > 0 else 0:.1f}%")
     
     if total_failed == 0:
-        print("\n🎉 ALL TESTS PASSED! SaaS Authentication System is working correctly.")
+        print("\n🎉 ALL TESTS PASSED! Usage Limitation System is working correctly.")
         exit(0)
     else:
         print(f"\n⚠️  {total_failed} tests failed. Review the details above.")
