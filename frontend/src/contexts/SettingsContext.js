@@ -217,16 +217,16 @@ export const SettingsProvider = ({ children }) => {
   const initializeAnalytics = () => {
     // Simuler l'initialisation d'analytics
     console.log('📊 Analytics initialized');
-    if (typeof gtag !== 'undefined') {
-      gtag('consent', 'update', { analytics_storage: 'granted' });
+    if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
+      window.gtag('consent', 'update', { analytics_storage: 'granted' });
     }
   };
 
   const disableAnalytics = () => {
     // Simuler la désactivation d'analytics
     console.log('🚫 Analytics disabled');
-    if (typeof gtag !== 'undefined') {
-      gtag('consent', 'update', { analytics_storage: 'denied' });
+    if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
+      window.gtag('consent', 'update', { analytics_storage: 'denied' });
     }
   };
 
