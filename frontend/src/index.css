@@ -82,5 +82,149 @@ code {
     }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
     }
+}
+
+/* Thèmes et transitions */
+html {
+  transition: all 0.3s ease;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+/* Mode compact */
+body.compact-mode {
+  --spacing-unit: 0.75rem;
+}
+
+body.compact-mode .container {
+  padding: var(--spacing-unit);
+}
+
+body.compact-mode .space-y-6 > * + * {
+  margin-top: calc(var(--spacing-unit) * 1.5);
+}
+
+body.compact-mode .space-y-4 > * + * {
+  margin-top: var(--spacing-unit);
+}
+
+body.compact-mode .p-6 {
+  padding: var(--spacing-unit);
+}
+
+body.compact-mode .py-8 {
+  padding-top: var(--spacing-unit);
+  padding-bottom: var(--spacing-unit);
+}
+
+/* Désactiver les animations si demandé */
+body.no-animations *,
+body.no-animations *::before,
+body.no-animations *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Styles pour les tooltips */
+.tooltip-enabled [title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  z-index: 50;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid hsl(var(--border));
+}
+
+/* Animations supplémentaires pour les paramètres */
+.settings-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.settings-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Styles pour les badges premium */
+.premium-badge {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+  font-weight: 600;
+}
+
+/* Animation pour le spinner de chargement */
+@keyframes settings-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.settings-spinner {
+  animation: settings-spin 2s linear infinite;
+}
+
+/* Responsive improvements pour les paramètres */
+@media (max-width: 1024px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Styles pour le mode sombre spécifique aux paramètres */
+.dark .settings-card {
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+}
+
+/* Améliorations visuelles pour les switches */
+.settings-switch[data-state="checked"] {
+  background: hsl(var(--primary));
+}
+
+.settings-switch[data-state="unchecked"] {
+  background: hsl(var(--input));
+}
+
+/* Styles pour les sliders */
+.settings-slider [role="slider"] {
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--background));
+}
+
+.settings-slider [data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Feedback visuel pour les changements de paramètres */
+.setting-changed {
+  animation: setting-highlight 0.5s ease-out;
+}
+
+@keyframes setting-highlight {
+  0% { 
+    background-color: hsl(var(--primary) / 0.1);
+    transform: scale(1.02);
+  }
+  100% { 
+    background-color: transparent;
+    transform: scale(1);
+  }
 }
