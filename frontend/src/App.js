@@ -10,6 +10,8 @@ import { TranslationProvider } from './hooks/useTranslation';
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from './components/ui/toaster';
+import UsageCounter from './components/UsageCounter';
+import PremiumFeatureLock from './components/PremiumFeatureLock';
 
 // Pages
 import Home from './pages/Home';
@@ -22,6 +24,7 @@ import Pricing from './pages/Pricing';
 import ThankYou from './pages/ThankYou';
 import Account from './pages/Account';
 import Settings from './pages/Settings';
+import CommunitySupport from './pages/CommunitySupport';
 
 // Layout
 import AppLayout from './components/AppLayout';
@@ -35,12 +38,13 @@ import { validateCards } from './services/pokerAPI';
 import { useToast } from './hooks/use-toast';
 import { useSettings } from './contexts/SettingsContext';
 
-// Calculator component (protected)
+// Calculator component (protected) with usage limits
 const Calculator = () => {
   const [analysis, setAnalysis] = useState(null);
   const [playerCount, setPlayerCount] = useState(2);
   const [isLoading, setIsLoading] = useState(false);
   const [currentCards, setCurrentCards] = useState({ holeCards: [null, null], communityCards: [null, null, null, null, null] });
+  const [usageStats, setUsageStats] = useState(null);
   const { toast } = useToast();
   const { settings } = useSettings();
 
@@ -50,14 +54,32 @@ const Calculator = () => {
     setAnalysis(null);
   };
 
+  const fetchUsageStats = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/usage-stats`, {
+        credentials: 'include',
+        headers: AuthAPI.getAuthHeaders()
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsageStats(data);
+        return data;
+      }
+    } catch (error) {
+      console.error('Error fetching usage stats:', error);
+    }
+    return null;
+  };
+
   const handleCalculate = async () => {
     const { holeCards, communityCards } = currentCards;
     
     const validHoleCards = holeCards.filter(Boolean);
     if (validHoleCards.length < 2) {
       toast({
-        title: "Incomplete Hand",
-        description: "Please select both hole cards before calculating",
+        title: "Main incomplète",
+        description: "Veuillez sélectionner vos deux cartes fermées avant de calculer",
         variant: "destructive",
       });
       return;
@@ -66,7 +88,7 @@ const Calculator = () => {
     const validationErrors = validateCards(holeCards, communityCards);
     if (validationErrors.length > 0) {
       toast({
-        title: "Invalid Cards",
+        title: "Cartes invalides",
         description: validationErrors.join(', '),
         variant: "destructive",
       });
@@ -99,6 +121,9 @@ const Calculator = () => {
         const data = await response.json();
         setAnalysis(data);
         
+        // Update usage stats after successful analysis
+        await fetchUsageStats();
+        
         // Play success sound if enabled
         if (settings.soundEffects) {
           // This would be handled by the SettingsProvider
@@ -106,21 +131,48 @@ const Calculator = () => {
         
         // Show notification if enabled
         if (settings.notifications) {
-          // This would be handled by the SettingsProvider
+          toast({
+            title: "Analyse terminée",
+            description: `Probabilité de victoire: ${data.win_probability}%`,
+          });
+        }
+      } else if (response.status === 429) {
+        // Handle rate limit error
+        const errorData = await response.json();
+        const detail = errorData.detail;
+        
+        if (detail.error === 'limit_reached') {
+          toast({
+            title: "Limite quotidienne atteinte",
+            description: detail.message,
+            variant: "destructive",
+          });
+          
+          // Update usage stats
+          await fetchUsageStats();
+          
+          // Show premium upsell
+          setAnalysis({
+            error: 'limit_reached',
+            message: detail.message,
+            show_premium_upsell: true,
+            remaining_analyses: detail.remaining_analyses,
+            reset_time: detail.reset_time
+          });
         }
       } else {
         const errorData = await response.json();
         toast({
-          title: "Analysis Failed",
-          description: errorData.detail || "Failed to analyze hand",
+          title: "Échec de l'analyse",
+          description: errorData.detail || "Impossible d'analyser la main",
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Error during analysis:', error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred during analysis",
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite lors de l'analyse",
         variant: "destructive",
       });
     } finally {
@@ -132,6 +184,11 @@ const Calculator = () => {
     setPlayerCount(count);
     setAnalysis(null);
   };
+
+  // Fetch usage stats on component mount
+  React.useEffect(() => {
+    fetchUsageStats();
+  }, []);
 
   const canCalculate = currentCards.holeCards.filter(Boolean).length === 2;
   console.log('Can calculate:', canCalculate, 'Current cards:', currentCards);
@@ -147,6 +204,11 @@ const Calculator = () => {
             <p className="text-lg text-emerald-200 opacity-90 font-medium">
               Advanced Texas Hold'em Probability Analysis
             </p>
+            
+            {/* Usage Counter Display */}
+            <div className="mt-4 max-w-md mx-auto">
+              <UsageCounter showDetails={true} />
+            </div>
           </div>
         </div>
       </div>
@@ -180,7 +242,7 @@ const Calculator = () => {
                 {isLoading ? (
                   <>
                     <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Analyzing Hand...
+                    Analysing Hand...
                   </>
                 ) : (
                   <>
@@ -194,11 +256,19 @@ const Calculator = () => {
 
           <div className="xl:col-span-2">
             <div className="bg-gradient-to-br from-[#2A2A2A] to-[#1F1F1F] rounded-3xl shadow-2xl border border-gray-700/50 p-6 h-full">
-              <ProbabilityDashboard 
-                analysis={analysis} 
-                playerCount={playerCount}
-                isLoading={isLoading}
-              />
+              {analysis?.error === 'limit_reached' ? (
+                <PremiumFeatureLock 
+                  feature="unlimited_analyses"
+                  size="large"
+                  className="h-full"
+                />
+              ) : (
+                <ProbabilityDashboard 
+                  analysis={analysis} 
+                  playerCount={playerCount}
+                  isLoading={isLoading}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -243,6 +313,12 @@ function App() {
                     </ProtectedRoute>
                   } />
                   
+                  <Route path="/community-support" element={
+                    <ProtectedRoute>
+                      <CommunitySupport />
+                    </ProtectedRoute>
+                  } />
+                  
                   <Route path="/thank-you" element={
                     <ProtectedRoute>
                       <ThankYou />
@@ -250,7 +326,7 @@ function App() {
                   } />
 
                   <Route path="/calculator" element={
-                    <ProtectedRoute requireSubscription={true}>
+                    <ProtectedRoute requireSubscription={false}>
                       <Calculator />
                     </ProtectedRoute>
                   } />
