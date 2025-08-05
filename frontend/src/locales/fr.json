@@ -1,0 +1,125 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Sauvegarder",
+    "reset": "Réinitialiser",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "close": "Fermer",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "account": "Mon compte",
+    "dashboard": "Tableau de bord",
+    "calculator": "Calculateur",
+    "subscription": "Abonnement",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Se déconnecter",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgot_password": "Mot de passe oublié ?",
+    "create_account": "Créer un compte",
+    "welcome_back": "Bon retour !",
+    "access_space": "Accédez à votre espace Poker Pro"
+  },
+  "calculator": {
+    "title": "Calculateur de Probabilités Poker",
+    "subtitle": "Analyse avancée Texas Hold'em",
+    "hole_cards": "Cartes fermées",
+    "community_cards": "Cartes communes",
+    "player_count": "Nombre de joueurs",
+    "calculate": "Calculer les Probabilités",
+    "calculating": "Analyse en cours...",
+    "monte_carlo": "Simulation Monte Carlo",
+    "iterations": "itérations",
+    "win_probability": "Probabilité de victoire",
+    "tie_probability": "Probabilité d'égalité",
+    "lose_probability": "Probabilité de défaite",
+    "hand_strength": "Force de la main",
+    "recommendations": "Recommandations stratégiques",
+    "opponent_analysis": "Analyse des adversaires"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Personnalisez votre expérience Poker Pro",
+    
+    "appearance": {
+      "title": "Apparence",
+      "theme": "Thème",
+      "theme_light": "Clair",
+      "theme_dark": "Sombre", 
+      "theme_auto": "Automatique",
+      "language": "Langue",
+      "compact_mode": "Mode compact",
+      "animations": "Animations"
+    },
+    
+    "interface": {
+      "title": "Interface",
+      "notifications": "Notifications",
+      "sound_effects": "Effets sonores",
+      "auto_save": "Sauvegarde automatique",
+      "tooltips": "Info-bulles d'aide",
+      "advanced_mode": "Mode avancé"
+    },
+    
+    "calculator": {
+      "title": "Calculateur",
+      "simulations": "Simulations Monte Carlo",
+      "auto_calculate": "Calcul automatique",
+      "probability_details": "Détails des probabilités",
+      "simulation_speed": "Vitesse de simulation"
+    },
+    
+    "privacy": {
+      "title": "Confidentialité",
+      "analytics": "Analyser l'utilisation",
+      "data_sharing": "Partage de données",
+      "cookies": "Cookies fonctionnels"
+    },
+    
+    "reset_section": {
+      "title": "Réinitialisation",
+      "reset_all": "Rétablir les paramètres par défaut",
+      "reset_warning": "Cette action restaurera tous les paramètres à leur valeur par défaut.",
+      "confirm_reset": "Êtes-vous sûr ?"
+    },
+    
+    "premium": {
+      "feature_locked": "Fonctionnalité Premium",
+      "upgrade_required": "Abonnement requis pour accéder à cette option",
+      "learn_more": "En savoir plus"
+    }
+  },
+  "dashboard": {
+    "welcome": "Bienvenue",
+    "recent_analyses": "Analyses récentes",
+    "statistics": "Statistiques",
+    "quick_access": "Accès rapide"
+  },
+  "subscription": {
+    "current_plan": "Plan actuel",
+    "upgrade": "Améliorer",
+    "features": "Fonctionnalités",
+    "billing": "Facturation"
+  },
+  "notifications": {
+    "settings_saved": "Paramètres sauvegardés",
+    "settings_reset": "Paramètres réinitialisés",
+    "theme_changed": "Thème modifié",
+    "language_changed": "Langue modifiée",
+    "calculation_complete": "Calcul terminé",
+    "error_occurred": "Une erreur s'est produite"
+  }
+}

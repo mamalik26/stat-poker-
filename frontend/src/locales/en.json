@@ -1,0 +1,125 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "reset": "Reset",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "navigation": {
+    "home": "Home",
+    "account": "My Account",
+    "dashboard": "Dashboard",
+    "calculator": "Calculator",
+    "subscription": "Subscription",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "logout": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "forgot_password": "Forgot Password?",
+    "create_account": "Create Account",
+    "welcome_back": "Welcome Back!",
+    "access_space": "Access your Poker Pro space"
+  },
+  "calculator": {
+    "title": "Poker Probability Calculator",
+    "subtitle": "Advanced Texas Hold'em Analysis",
+    "hole_cards": "Hole Cards",
+    "community_cards": "Community Cards",
+    "player_count": "Number of Players",
+    "calculate": "Calculate Probabilities",
+    "calculating": "Analyzing...",
+    "monte_carlo": "Monte Carlo Simulation",
+    "iterations": "iterations",
+    "win_probability": "Win Probability",
+    "tie_probability": "Tie Probability",
+    "lose_probability": "Lose Probability",
+    "hand_strength": "Hand Strength",
+    "recommendations": "Strategic Recommendations",
+    "opponent_analysis": "Opponent Analysis"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your Poker Pro experience",
+    
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "theme_light": "Light",
+      "theme_dark": "Dark",
+      "theme_auto": "Auto",
+      "language": "Language",
+      "compact_mode": "Compact Mode",
+      "animations": "Animations"
+    },
+    
+    "interface": {
+      "title": "Interface",
+      "notifications": "Notifications",
+      "sound_effects": "Sound Effects",
+      "auto_save": "Auto Save",
+      "tooltips": "Help Tooltips",
+      "advanced_mode": "Advanced Mode"
+    },
+    
+    "calculator": {
+      "title": "Calculator",
+      "simulations": "Monte Carlo Simulations",
+      "auto_calculate": "Auto Calculate",
+      "probability_details": "Probability Details",
+      "simulation_speed": "Simulation Speed"
+    },
+    
+    "privacy": {
+      "title": "Privacy",
+      "analytics": "Usage Analytics",
+      "data_sharing": "Data Sharing",
+      "cookies": "Functional Cookies"
+    },
+    
+    "reset_section": {
+      "title": "Reset",
+      "reset_all": "Reset to Default Settings",
+      "reset_warning": "This will restore all settings to their default values.",
+      "confirm_reset": "Are you sure?"
+    },
+    
+    "premium": {
+      "feature_locked": "Premium Feature",
+      "upgrade_required": "Subscription required to access this option",
+      "learn_more": "Learn More"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "recent_analyses": "Recent Analyses",
+    "statistics": "Statistics",
+    "quick_access": "Quick Access"
+  },
+  "subscription": {
+    "current_plan": "Current Plan",
+    "upgrade": "Upgrade",
+    "features": "Features",
+    "billing": "Billing"
+  },
+  "notifications": {
+    "settings_saved": "Settings Saved",
+    "settings_reset": "Settings Reset",
+    "theme_changed": "Theme Changed",
+    "language_changed": "Language Changed",
+    "calculation_complete": "Calculation Complete",
+    "error_occurred": "An error occurred"
+  }
+}
