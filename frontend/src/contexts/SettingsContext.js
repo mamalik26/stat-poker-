@@ -264,7 +264,12 @@ export const SettingsProvider = ({ children }) => {
 
   // Charger les paramètres au démarrage ou changement d'utilisateur
   useEffect(() => {
-    loadSettings();
+    // Ajouter un délai pour s'assurer que le contexte Auth est initialisé
+    const timeoutId = setTimeout(() => {
+      loadSettings();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [user?.id]);
 
   // Écouter les changements de préférence système pour le thème auto
