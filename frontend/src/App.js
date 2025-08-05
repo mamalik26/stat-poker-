@@ -4,6 +4,8 @@ import './App.css';
 
 // Context
 import { AuthProvider } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
+import { TranslationProvider } from './hooks/useTranslation';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -31,6 +33,7 @@ import TestCalculator from './TestCalculator';
 import { AuthAPI } from './services/authAPI';
 import { validateCards } from './services/pokerAPI';
 import { useToast } from './hooks/use-toast';
+import { useSettings } from './contexts/SettingsContext';
 
 // Calculator component (protected)
 const Calculator = () => {
@@ -39,6 +42,7 @@ const Calculator = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentCards, setCurrentCards] = useState({ holeCards: [null, null], communityCards: [null, null, null, null, null] });
   const { toast } = useToast();
+  const { settings } = useSettings();
 
   const handleCardsChange = (holeCards, communityCards) => {
     console.log('Cards changed:', { holeCards, communityCards });
@@ -72,6 +76,9 @@ const Calculator = () => {
     setIsLoading(true);
     
     try {
+      // Use settings for simulation iterations
+      const simulationIterations = settings.simulations || 100000;
+      
       // Use authenticated poker API
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analyze-hand`, {
         method: 'POST',
@@ -84,13 +91,23 @@ const Calculator = () => {
           hole_cards: holeCards.filter(Boolean),
           community_cards: communityCards,
           player_count: playerCount,
-          simulation_iterations: 100000
+          simulation_iterations: simulationIterations
         })
       });
 
       if (response.ok) {
         const data = await response.json();
         setAnalysis(data);
+        
+        // Play success sound if enabled
+        if (settings.soundEffects) {
+          // This would be handled by the SettingsProvider
+        }
+        
+        // Show notification if enabled
+        if (settings.notifications) {
+          // This would be handled by the SettingsProvider
+        }
       } else {
         const errorData = await response.json();
         toast({
@@ -158,7 +175,7 @@ const Calculator = () => {
                   }
                 `}
                 aria-label="Calculate hand probabilities using Monte Carlo simulation"
-                title={canCalculate ? "Run Monte Carlo simulation (100,000 iterations)" : "Select both hole cards to enable calculation"}
+                title={canCalculate ? `Run Monte Carlo simulation (${(settings.simulations || 100000).toLocaleString()} iterations)` : "Select both hole cards to enable calculation"}
               >
                 {isLoading ? (
                   <>
@@ -193,56 +210,60 @@ const Calculator = () => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <div className="App">
-          <AppLayout>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/pricing" element={<Pricing />} />
+      <SettingsProvider>
+        <TranslationProvider>
+          <BrowserRouter>
+            <div className="App">
+              <AppLayout>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/pricing" element={<Pricing />} />
 
-              {/* Protected routes */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
+                  {/* Protected routes */}
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } />
 
-              <Route path="/account" element={
-                <ProtectedRoute>
-                  <Account />
-                </ProtectedRoute>
-              } />
+                  <Route path="/account" element={
+                    <ProtectedRoute>
+                      <Account />
+                    </ProtectedRoute>
+                  } />
 
-              <Route path="/settings" element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/thank-you" element={
-                <ProtectedRoute>
-                  <ThankYou />
-                </ProtectedRoute>
-              } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/thank-you" element={
+                    <ProtectedRoute>
+                      <ThankYou />
+                    </ProtectedRoute>
+                  } />
 
-              <Route path="/calculator" element={
-                <ProtectedRoute requireSubscription={true}>
-                  <Calculator />
-                </ProtectedRoute>
-              } />
+                  <Route path="/calculator" element={
+                    <ProtectedRoute requireSubscription={true}>
+                      <Calculator />
+                    </ProtectedRoute>
+                  } />
 
-              {/* Test route for card selector */}
-              <Route path="/test-calculator" element={<TestCalculator />} />
-            </Routes>
-          </AppLayout>
-          <Toaster />
-        </div>
-      </BrowserRouter>
+                  {/* Test route for card selector */}
+                  <Route path="/test-calculator" element={<TestCalculator />} />
+                </Routes>
+              </AppLayout>
+              <Toaster />
+            </div>
+          </BrowserRouter>
+        </TranslationProvider>
+      </SettingsProvider>
     </AuthProvider>
   );
 }
