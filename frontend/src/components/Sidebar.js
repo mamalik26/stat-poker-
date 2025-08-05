@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
 import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer';
+import UsageCounter from './UsageCounter';
 import {
   Home,
   User,
@@ -15,7 +16,9 @@ import {
   Settings,
   LogOut,
   Menu,
-  Crown
+  Crown,
+  Users,
+  MessageSquare
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -48,6 +51,13 @@ const Sidebar = () => {
       label: "Calculateur",
       href: "/calculator",
       description: "Accéder au moteur d'analyse de main"
+    },
+    {
+      icon: <MessageSquare className="h-5 w-5" />,
+      label: "Support",
+      href: "/community-support",
+      description: "Questions et communauté",
+      highlight: true // Nouveau feature
     },
     {
       icon: <CreditCard className="h-5 w-5" />,
@@ -96,7 +106,7 @@ const Sidebar = () => {
     if (user?.subscription_status === 'active') {
       return { status: 'active', label: 'Abonnement actif', color: 'bg-green-600' };
     }
-    return { status: 'inactive', label: 'Non abonné', color: 'bg-red-600' };
+    return { status: 'inactive', label: 'Compte gratuit', color: 'bg-gray-500' };
   };
 
   const SidebarContent = () => (
@@ -121,6 +131,13 @@ const Sidebar = () => {
         </div>
       </div>
 
+      {/* Usage Counter for Free Users */}
+      {user && user.subscription_status !== 'active' && user.role !== 'moderator' && user.role !== 'admin' && (
+        <div className="px-4 py-3">
+          <UsageCounter showDetails={false} />
+        </div>
+      )}
+
       {/* Navigation principale */}
       <nav className="flex-1 px-4 py-6 space-y-2">
         {menuItems.map((item) => {
@@ -130,17 +147,29 @@ const Sidebar = () => {
               key={item.href}
               to={item.href}
               onClick={() => handleLinkClick(item.href)}
-              className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-300 group ${
+              className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-300 group relative ${
                 active
                   ? 'bg-emerald-600/30 text-emerald-300 shadow-lg'
                   : 'text-gray-300 hover:bg-emerald-800/20 hover:text-white'
               }`}
             >
+              {/* Highlight indicator for new features */}
+              {item.highlight && !active && (
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+              )}
+              
               <span className={`${active ? 'text-emerald-300' : 'text-gray-400 group-hover:text-emerald-400'} transition-colors`}>
                 {item.icon}
               </span>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium">{item.label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{item.label}</span>
+                  {item.highlight && (
+                    <Badge className="bg-yellow-500 text-black text-xs px-1.5 py-0.5 h-4">
+                      Nouveau
+                    </Badge>
+                  )}
+                </div>
                 {active && (
                   <p className="text-xs text-emerald-400 mt-0.5">
                     {item.description}
@@ -174,13 +203,16 @@ const Sidebar = () => {
               {getSubscriptionStatus().label}
             </Badge>
           </div>
-          <Link
-            to="/pricing"
-            onClick={() => handleLinkClick('/pricing')}
-            className="block w-full text-center px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs rounded-md transition-all duration-300"
-          >
-            Gérer l'abonnement
-          </Link>
+          
+          {user?.subscription_status !== 'active' && user?.role !== 'moderator' && user?.role !== 'admin' && (
+            <Link
+              to="/pricing"
+              onClick={() => handleLinkClick('/pricing')}
+              className="block w-full text-center px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs rounded-md transition-all duration-300"
+            >
+              Passer au Premium
+            </Link>
+          )}
         </div>
       </div>
     </div>
