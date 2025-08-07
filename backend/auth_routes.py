@@ -22,66 +22,49 @@ async def get_current_user(
 ) -> User:
     auth_service = AuthService(db)
     
-    # Debug: Log all headers and cookies
-    print(f"🔍 [AUTH DEBUG] Request headers: {dict(request.headers)}")
-    print(f"🔍 [AUTH DEBUG] Request cookies: {request.cookies}")
-    
     # Try to get token from cookie first, then from Authorization header
     token = None
     
     # Check cookie first
     cookie_token = request.cookies.get("access_token")
-    print(f"🔍 [AUTH DEBUG] Raw cookie token: {cookie_token}")
     
     if cookie_token:
         if cookie_token.startswith('"Bearer ') and cookie_token.endswith('"'):
             # Handle quoted Bearer token: "Bearer token"
             token = cookie_token[8:-1]  # Remove "Bearer and trailing quote
-            print(f"🔧 [AUTH DEBUG] Extracted token from quoted Bearer cookie: {token[:20]}...")
         elif cookie_token.startswith("Bearer "):
             # Handle Bearer token: Bearer token
             token = cookie_token.split(" ")[1]
-            print(f"🔧 [AUTH DEBUG] Extracted token from Bearer cookie: {token[:20]}...")
         else:
             # Handle raw token
             token = cookie_token
-            print(f"🔧 [AUTH DEBUG] Using raw token from cookie: {token[:20]}...")
     
     # If no cookie token, check Authorization header
     if not token:
         authorization = request.headers.get("Authorization")
-        print(f"🔍 [AUTH DEBUG] Authorization header: {authorization}")
         
         if authorization and authorization.startswith("Bearer "):
             token = authorization.split(" ")[1]
-            print(f"🔧 [AUTH DEBUG] Extracted token from Authorization header: {token[:20]}...")
     
     if not token:
-        print("❌ [AUTH DEBUG] No token found in cookies or headers")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication credentials required",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    print(f"✅ [AUTH DEBUG] Token found, verifying: {token[:20]}...")
-    
     # Verify token
     payload = auth_service.verify_token(token)
     if payload is None:
-        print("❌ [AUTH DEBUG] Token verification failed")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    print(f"✅ [AUTH DEBUG] Token verified, payload: {payload}")
-    
     # Get user
     user_id = payload.get("sub")
     if user_id is None:
-        print("❌ [AUTH DEBUG] No user ID in token payload")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload"
@@ -89,13 +72,11 @@ async def get_current_user(
     
     user = await auth_service.get_user_by_id(user_id)
     if user is None:
-        print(f"❌ [AUTH DEBUG] User not found for ID: {user_id}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found"
         )
     
-    print(f"✅ [AUTH DEBUG] User authenticated: {user.email}")
     return user
 
 # Get current user with active subscription or moderator role
