@@ -8,15 +8,38 @@ const API = `${BACKEND_URL}/api/auth`;
 export class AuthAPI {
   static getAuthHeaders() {
     const token = Cookies.get('access_token');
+    console.log('🔍 AuthAPI.getAuthHeaders - Raw token from cookie:', token);
+    
     if (token) {
-      // Remove quotes if present and ensure proper Bearer format
-      const cleanToken = token.replace(/"/g, '');
-      // If it already starts with "Bearer", use as is, otherwise add "Bearer "
-      const authToken = cleanToken.startsWith('Bearer ') ? cleanToken : `Bearer ${cleanToken}`;
-      return {
-        'Authorization': authToken
+      let cleanToken = token;
+      
+      // Remove outer quotes if present (handles both "Bearer xxx" and "xxx" cases)
+      if (cleanToken.startsWith('"') && cleanToken.endsWith('"')) {
+        cleanToken = cleanToken.slice(1, -1);
+        console.log('🔧 Removed quotes, token now:', cleanToken);
+      }
+      
+      // Handle different token formats
+      let finalToken;
+      if (cleanToken.startsWith('Bearer ')) {
+        // Token already has Bearer prefix
+        finalToken = cleanToken;
+        console.log('✅ Token already has Bearer prefix:', finalToken);
+      } else {
+        // Add Bearer prefix
+        finalToken = `Bearer ${cleanToken}`;
+        console.log('✅ Added Bearer prefix:', finalToken);
+      }
+      
+      const headers = {
+        'Authorization': finalToken
       };
+      
+      console.log('✅ Final auth headers:', headers);
+      return headers;
     }
+    
+    console.log('❌ No token found in cookies');
     return {};
   }
 
