@@ -12,7 +12,7 @@ import { Badge } from '../components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
-import AuthDebug from '../components/AuthDebug';
+import AuthDebugFixed from '../components/AuthDebugFixed';
 import {
   Settings as SettingsIcon,
   Palette,
