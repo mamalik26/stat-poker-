@@ -95,30 +95,58 @@ const Calculator = () => {
       return;
     }
 
+    console.log('🎯 Starting calculator analysis...');
+    
     setIsLoading(true);
     
     try {
+      // Check authentication status before making API call
+      const authHeaders = AuthAPI.getAuthHeaders();
+      console.log('🔐 Auth headers for analysis:', authHeaders);
+      
+      if (!authHeaders.Authorization) {
+        console.log('❌ No authorization header found!');
+        toast({
+          title: "Authentification requise",
+          description: "Connectez-vous pour utiliser le calculateur de probabilités.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Use settings for simulation iterations
       const simulationIterations = settings.simulations || 100000;
+      
+      const requestPayload = {
+        hole_cards: holeCards.filter(Boolean),
+        community_cards: communityCards,
+        player_count: playerCount,
+        simulation_iterations: simulationIterations
+      };
+      
+      console.log('📤 Sending request to analyze-hand:', requestPayload);
+      console.log('📤 Headers:', {
+        'Content-Type': 'application/json',
+        ...authHeaders
+      });
       
       // Use authenticated poker API
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/analyze-hand`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...AuthAPI.getAuthHeaders()
+          ...authHeaders
         },
         credentials: 'include',
-        body: JSON.stringify({
-          hole_cards: holeCards.filter(Boolean),
-          community_cards: communityCards,
-          player_count: playerCount,
-          simulation_iterations: simulationIterations
-        })
+        body: JSON.stringify(requestPayload)
       });
+
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', [...response.headers.entries()]);
 
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Analysis successful:', data);
         setAnalysis(data);
         
         // Update usage stats after successful analysis
@@ -139,6 +167,7 @@ const Calculator = () => {
       } else if (response.status === 429) {
         // Handle rate limit error
         const errorData = await response.json();
+        console.log('⚠️ Rate limit reached:', errorData);
         const detail = errorData.detail;
         
         if (detail.error === 'limit_reached') {
@@ -161,18 +190,39 @@ const Calculator = () => {
           });
         }
       } else {
-        const errorData = await response.json();
-        toast({
-          title: "Échec de l'analyse",
-          description: errorData.detail || "Impossible d'analyser la main",
-          variant: "destructive",
-        });
+        const errorText = await response.text();
+        console.log('❌ API Error Response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { detail: errorText };
+        }
+        
+        console.log('❌ Parsed error data:', errorData);
+        
+        // Special handling for authentication errors
+        if (response.status === 401) {
+          toast({
+            title: "Erreur d'authentification",
+            description: "Votre session a expiré. Veuillez vous reconnecter.",
+            variant: "destructive",
+          });
+          // Optionally redirect to login
+        } else {
+          toast({
+            title: "Échec de l'analyse",
+            description: errorData.detail || "Impossible d'analyser la main",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
-      console.error('Error during analysis:', error);
+      console.error('❌ Network/Unexpected Error during analysis:', error);
       toast({
-        title: "Erreur",
-        description: "Une erreur inattendue s'est produite lors de l'analyse",
+        title: "Erreur réseau",
+        description: "Une erreur de réseau s'est produite lors de l'analyse",
         variant: "destructive",
       });
     } finally {
